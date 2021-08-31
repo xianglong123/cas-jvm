@@ -268,8 +268,334 @@
     -XX:StringTableSize == 设置StringTable的长度（HashTable，越长时间越短，空间换时间）
     -XX:+HeapDumpOnOutOfMemoryError == OOM时生成dump文件开启
 
+### Jconsole 远程监控JVM
+    启动参数中加入如下参数
+    java 
+    -Djava.rmi.server.hostname=10.160.13.111  #远程服务器ip，即本机ip
+    -Dcom.sun.management.jmxremote #允许JMX远程调用
+    -Dcom.sun.management.jmxremote.port=3214  #自定义jmx 端口号
+    -Dcom.sun.management.jmxremote.ssl=false  # 是否需要ssl 安全连接方式
+    -Dcom.sun.management.jmxremote.authenticate=false #是否需要秘钥
+     -jar test.jar 
+     
+     案例：启动参数
+     -bash-4.2# cat start.sh 
+     #!/bin/sh
+     java  -jar -Dspring.profiles.active=prd -Djava.rmi.server.hostname=172.16.116.155 -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=3214 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false cas-redis-0.0.1-SNAPSHOT.jar & 
+     -bash-4.2# 
+     
+     用命令敲jconsole,再弹出的页面选择远程调用方式，输入ip+配置端口 ，再输入linux用户名和密码即可
+
+### jvm 指令操作
+    jinfo:可以输出并修改运行时的java 进程的opts。 (可以修改运行时参数)
+    jps:与unix上的ps类似，用来显示本地的java进程，可以查看本地运行着几个java程序，并显示他们的进程号。 
+    jstat:一个极强的监视VM内存工具。可以用来监视VM内存内的各种堆和非堆的大小及其内存使用量。 
+    jmap:打印出某个java进程（使用pid）内存内的所有'对象'的情况（如：产生那些对象，及其数量）。 
+    jconsole:一个java GUI监视工具，可以以图表化的形式显示各种数据。并可通过远程连接监视远程的服务器VM。 
+
+### jinfo
+    -bash-4.2# jinfo -help
+    Usage:
+        jinfo [option] <pid>
+            (to connect to running process)
+        jinfo [option] <executable <core>
+            (to connect to a core file)
+        jinfo [option] [server_id@]<remote server IP or hostname>
+            (to connect to remote debug server)
+    
+    where <option> is one of:
+        -flag <name>         to print the value of the named VM flag
+        -flag [+|-]<name>    to enable or disable the named VM flag
+        -flag <name>=<value> to set the named VM flag to the given value
+        -flags               to print VM flags
+        -sysprops            to print Java system properties
+        <no option>          to print both of the above
+        -h | -help           to print this help message
+
+#### 查看JVM参数[jinfo -flags process_id] 
+```bash
+-bash-4.2# jps
+1987 jar
+2083 Jps
+-bash-4.2# jinfo -flags 1987
+Attaching to process ID 1987, please wait...
+Debugger attached successfully.
+Server compiler detected.
+JVM version is 25.291-b10
+Non-default VM flags: -XX:CICompilerCount=2 -XX:InitialHeapSize=48234496 -XX:+ManagementServer -XX:MaxHeapSize=742391808 -XX:MaxNewSize=247463936 -XX:MinHeapDeltaBytes=524288 -XX:NewSize=15728640 -XX:OldSize=32505856 -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseFastUnorderedTimeStamps -XX:+UseParallelGC 
+Command line:  -Dspring.profiles.active=prd -Djava.rmi.server.hostname=172.16.116.155 -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=3214 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false
+-bash-4.2# 
+```    
+
+#### 查看Java系统参数[jinfo -sysprops process_id]
+```bash
+-bash-4.2# jinfo -sysprops 1987
+Attaching to process ID 1987, please wait...
+Debugger attached successfully.
+Server compiler detected.
+JVM version is 25.291-b10
+
+com.sun.management.jmxremote.authenticate = false
+java.runtime.name = Java(TM) SE Runtime Environment
+java.vm.version = 25.291-b10
+sun.boot.library.path = /usr/local/jdk1.8.0_291/jre/lib/amd64
+java.protocol.handler.pkgs = org.springframework.boot.loader
+java.vendor.url = http://java.oracle.com/
+java.vm.vendor = Oracle Corporation
+path.separator = :
+java.rmi.server.randomIDs = true
+file.encoding.pkg = sun.io
+java.vm.name = Java HotSpot(TM) 64-Bit Server VM
+sun.os.patch.level = unknown
+sun.java.launcher = SUN_STANDARD
+user.country = CN
+user.dir = /app/cas-redis
+java.vm.specification.name = Java Virtual Machine Specification
+com.sun.management.jmxremote.port = 3214
+PID = 1987
+java.runtime.version = 1.8.0_291-b10
+java.awt.graphicsenv = sun.awt.X11GraphicsEnvironment
+os.arch = amd64
+java.endorsed.dirs = /usr/local/jdk1.8.0_291/jre/lib/endorsed
+CONSOLE_LOG_CHARSET = UTF-8
+spring.profiles.active = prd
+line.separator = 
+
+java.io.tmpdir = /tmp
+java.vm.specification.vendor = Oracle Corporation
+os.name = Linux
+FILE_LOG_CHARSET = UTF-8
+sun.jnu.encoding = UTF-8
+java.library.path = /usr/java/packages/lib/amd64:/usr/lib64:/lib64:/lib:/usr/lib
+spring.beaninfo.ignore = true
+sun.nio.ch.bugLevel = 
+java.specification.name = Java Platform API Specification
+java.class.version = 52.0
+sun.management.compiler = HotSpot 64-Bit Tiered Compilers
+os.version = 3.10.0-1160.31.1.el7.x86_64
+user.home = /root
+user.timezone = Asia/Shanghai
+catalina.useNaming = false
+java.awt.printerjob = sun.print.PSPrinterJob
+file.encoding = UTF-8
+java.specification.version = 1.8
+catalina.home = /tmp/tomcat.9003.7652248120191127807
+user.name = root
+java.class.path = cas-redis-0.0.1-SNAPSHOT.jar
+com.sun.management.jmxremote = 
+java.vm.specification.version = 1.8
+sun.arch.data.model = 64
+sun.java.command = cas-redis-0.0.1-SNAPSHOT.jar
+java.home = /usr/local/jdk1.8.0_291/jre
+user.language = zh
+java.specification.vendor = Oracle Corporation
+awt.toolkit = sun.awt.X11.XToolkit
+com.sun.management.jmxremote.ssl = false
+java.vm.info = mixed mode
+java.version = 1.8.0_291
+java.ext.dirs = /usr/local/jdk1.8.0_291/jre/lib/ext:/usr/java/packages/lib/ext
+sun.boot.class.path = /usr/local/jdk1.8.0_291/jre/lib/resources.jar:/usr/local/jdk1.8.0_291/jre/lib/rt.jar:/usr/local/jdk1.8.0_291/jre/lib/sunrsasign.jar:/usr/local/jdk1.8.0_291/jre/lib/jsse.jar:/usr/local/jdk1.8.0_291/jre/lib/jce.jar:/usr/local/jdk1.8.0_291/jre/lib/charsets.jar:/usr/local/jdk1.8.0_291/jre/lib/jfr.jar:/usr/local/jdk1.8.0_291/jre/classes
+java.awt.headless = true
+java.vendor = Oracle Corporation
+catalina.base = /tmp/tomcat.9003.7652248120191127807
+file.separator = /
+java.vendor.url.bug = http://bugreport.sun.com/bugreport/
+sun.io.unicode.encoding = UnicodeLittle
+sun.cpu.endian = little
+java.rmi.server.hostname = 172.16.116.155
+sun.cpu.isalist = 
+```
+    
+### jstat
+    -bash-4.2# jstat -help
+    Usage: jstat -help|-options
+           jstat -<option> [-t] [-h<lines>] <vmid> [<interval> [<count>]]
+    
+    Definitions:
+      <option>      An option reported by the -options option
+      <vmid>        Virtual Machine Identifier. A vmid takes the following form:
+                         <lvmid>[@<hostname>[:<port>]]
+                    Where <lvmid> is the local vm identifier for the target
+                    Java virtual machine, typically a process id; <hostname> is
+                    the name of the host running the target Java virtual machine;
+                    and <port> is the port number for the rmiregistry on the
+                    target host. See the jvmstat documentation for a more complete
+                    description of the Virtual Machine Identifier.
+      <lines>       Number of samples between header lines.
+      <interval>    Sampling interval. The following forms are allowed:
+                        <n>["ms"|"s"]
+                    Where <n> is an integer and the suffix specifies the units as 
+                    milliseconds("ms") or seconds("s"). The default units are "ms".
+      <count>       Number of samples to take before terminating.
+      -J<flag>      Pass <flag> directly to the runtime system.
+
+####  查看加载class的数量，及所占空间等信息【jstat -class pid】
+```bash
+-bash-4.2# jstat -class 1987
+Loaded  Bytes  Unloaded  Bytes     Time   
+ 10257 18543.0        0     0.0       3.49
+```
+
+#### 显示VM实时编译的数量等信息【jstat -compiler pid】
+```bash
+-bash-4.2# jstat -compiler 1987
+Compiled Failed Invalid   Time   FailedType FailedMethod
+    5023      1       0     5.91          1 sun/misc/URLClassPath$JarLoader getResource
+```
+
+#### 可以显示gc的信息，查看gc的次数、时间【jstat -gc pid】
+```bash
+# 其中最后五项，分别是young gc的次数，young gc的时间，full gc的次数，full gc的时间，gc的总时间。 
+-bash-4.2# jstat -gc 1987
+ S0C    S1C    S0U    S1U      EC       EU        OC         OU       MC     MU    CCSC   CCSU   YGC     YGCT    FGC    FGCT     GCT   
+9728.0 10752.0 9608.1  0.0   220160.0 205103.6  43520.0    12960.8   48856.0 46183.3 6616.0 6135.9     12    0.098   2      0.079    0.177
+```
+
+#### 显示VM内存中三代（young，old，perm）对象的使用和占用大小
+    PGCMN显示的是最小perm的内存使用量，PGCMX显示的是perm的内存最大使用量，PGC是当前新生成的perm内存占用量，PC是但前perm内存占用量。其他的可以根据这个类推， OC是old内纯的占用量。 
+```bash
+-bash-4.2# jstat -gccapacity 1987
+ NGCMN    NGCMX     NGC     S0C   S1C       EC      OGCMN      OGCMX       OGC         OC       MCMN     MCMX      MC     CCSMN    CCSMX     CCSC    YGC    FGC 
+ 15360.0 241664.0 241664.0 9728.0 10752.0 220160.0    31744.0   483328.0    43520.0    43520.0      0.0 1091584.0  48856.0      0.0 1048576.0   6616.0     12     2
+```
+
+#### new对象的信息
+```bash
+-bash-4.2# jstat -gcnew 1987
+ S0C    S1C    S0U    S1U   TT MTT  DSS      EC       EU     YGC     YGCT  
+9728.0 10752.0 9608.1    0.0  1  15 10752.0 220160.0 205103.6     12    0.098
+```
+
+#### new对象的信息
+```bash
+-bash-4.2# jstat -gcnew 1987
+ S0C    S1C    S0U    S1U   TT MTT  DSS      EC       EU     YGC     YGCT  
+9728.0 10752.0 9608.1    0.0  1  15 10752.0 220160.0 205103.6     12    0.098
+```
+
+### jmp
+
+#### 查看概要信息【jmap -heap pid】
+```bash
+-bash-4.2# jmap -heap 1987
+Attaching to process ID 1987, please wait...
+Debugger attached successfully.
+Server compiler detected.
+JVM version is 25.291-b10
+
+using thread-local object allocation.
+Parallel GC with 2 thread(s)
+
+Heap Configuration:
+   MinHeapFreeRatio         = 0
+   MaxHeapFreeRatio         = 100
+   MaxHeapSize              = 742391808 (708.0MB)
+   NewSize                  = 15728640 (15.0MB)
+   MaxNewSize               = 247463936 (236.0MB)
+   OldSize                  = 32505856 (31.0MB)
+   NewRatio                 = 2
+   SurvivorRatio            = 8
+   MetaspaceSize            = 21807104 (20.796875MB)
+   CompressedClassSpaceSize = 1073741824 (1024.0MB)
+   MaxMetaspaceSize         = 17592186044415 MB
+   G1HeapRegionSize         = 0 (0.0MB)
+
+Heap Usage:
+PS Young Generation
+Eden Space:
+   capacity = 225443840 (215.0MB)
+   used     = 210777584 (201.01316833496094MB)
+   free     = 14666256 (13.986831665039062MB)
+   93.49449689998183% used
+From Space:
+   capacity = 9961472 (9.5MB)
+   used     = 9838704 (9.382919311523438MB)
+   free     = 122768 (0.1170806884765625MB)
+   98.7675717002467% used
+To Space:
+   capacity = 11010048 (10.5MB)
+   used     = 0 (0.0MB)
+   free     = 11010048 (10.5MB)
+   0.0% used
+PS Old Generation
+   capacity = 44564480 (42.5MB)
+   used     = 13271848 (12.657020568847656MB)
+   free     = 31292632 (29.842979431152344MB)
+   29.781224867876837% used
+
+18247 interned Strings occupying 1569784 bytes.
+```
+#### MB数据转换，1Mb = 100万bytes大约
+![avatar](src/main/resources/static/Mb转换.jpg)
+
+#### 查看对象【jmap -histo pid】
+```bash
+-bash-4.2# jmap -histo 1987
+
+ num     #instances         #bytes  class name
+----------------------------------------------
+   1:        434151       84956976  [C
+   2:         31310       69555888  [I
+   3:         67252       25864576  [B
+   4:        282895        6789480  java.lang.String
+   5:         90911        5228072  [Ljava.lang.Object;
+   6:         40588        2597632  java.net.URL
+   7:         26172        2303136  java.lang.reflect.Method
+   8:         80180        1687984  [Ljava.lang.Class;
+   9:         17006        1365088  [Ljava.util.WeakHashMap$Entry;
+  10:         10948        1201120  java.lang.Class
+  11:         36658        1173056  java.util.concurrent.ConcurrentHashMap$Node
+  12:         16840        1077760  org.springframework.boot.loader.jar.JarFileWrapper
+  13:         32389        1036448  org.springframework.boot.loader.jar.StringSequence
+  14:         23750         950000  java.lang.ref.Finalizer
+  15:         12702         946656  [S
+  16:         10654         889256  [Ljava.util.HashMap$Node;
+  17:         16995         815760  java.util.WeakHashMap
+  18:         32389         777336  org.springframework.boot.loader.jar.JarURLConnection$JarEntryName
+  19:         24284         777088  java.io.ObjectStreamClass$WeakClassKey
+  20:         19010         760400  java.util.LinkedHashMap$Entry
+  21:         22028         704896  java.util.HashMap
+```
+
+#### 导出dump并分析【jmap -dump:format=b,file=path/heap.hprof 1987】
 
 
+#### 查看gc实时【jstat -gcutil  1987  1000 100】1000毫秒 100次
+    时间戳记-自目标JVM启动时间以来的时间（以秒为单位）。
+    S0C –幸存者0区域的容量，以KB为单位
+    S1C –幸存者1区域的容量，以KB为单位
+    S0U –幸存者0区域使用的空间以KB为单位
+    S1U –幸存者1区域以KB为单位使用空间
+    EC –伊甸园地区容量（KB）
+    欧盟–伊甸园地区的已利用空间（以KB为单位）
+    OC –旧区域容量（KB）
+    OU –旧区域的已利用空间，以KB为单位
+    MC –元空间区域容量（KB）
+    MU –元空间区域以KB为单位的使用空间
+    CCSC –压缩类空间区域的容量，以KB为单位
+    CCSU –压缩类空间区域以KB为单位使用空间
+    YGC –迄今为止发生的年轻GC事件的数量
+    YGCT –到目前为止，年轻GC花费的时间
+    FGC –迄今为止已发生的完全GC事件的数量
+    FGCT –到目前为止已花费的完整GC时间
+    GCT –到目前为止所花费的GC时间总量（基本上是YGCT + FGCT）
+    
+```bash
+-bash-4.2# jstat -gcutil  1987  1000 100
+  S0     S1     E      O      M     CCS    YGC     YGCT    FGC    FGCT     GCT   
+ 98.77   0.00  93.49  29.78  94.53  92.74     12    0.098     2    0.079    0.177
+ 98.77   0.00  93.49  29.78  94.53  92.74     12    0.098     2    0.079    0.177
+ 98.77   0.00  93.49  29.78  94.53  92.74     12    0.098     2    0.079    0.177
+ 98.77   0.00  93.49  29.78  94.53  92.74     12    0.098     2    0.079    0.177
+ 98.77   0.00  93.49  29.78  94.53  92.74     12    0.098     2    0.079    0.177
+ 98.77   0.00  93.49  29.78  94.53  92.74     12    0.098     2    0.079    0.177
+ 98.77   0.00  93.49  29.78  94.53  92.74     12    0.098     2    0.079    0.177
+ 98.77   0.00  93.49  29.78  94.53  92.74     12    0.098     2    0.079    0.177
+ 98.77   0.00  93.49  29.78  94.53  92.74     12    0.098     2    0.079    0.177
+ 98.77   0.00  93.49  29.78  94.53  92.74     12    0.098     2    0.079    0.177
+ 98.77   0.00  93.49  29.78  94.53  92.74     12    0.098     2    0.079    0.177
+```
 
+### 查看所有的参数【java -XX:+PrintFlagsFinal】
 
 
